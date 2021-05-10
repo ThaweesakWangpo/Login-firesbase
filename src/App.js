@@ -1,10 +1,49 @@
+import React, {useState, useEffect} from 'react';
 import logo from './logo.svg';
+
+import Login from './components/Login'; 
+import auth from './firebase';
+
 import './App.css';
 
+
 function App() {
+  const [session, setSession] = useState({
+    isLoggedIn: false,
+    currentUser: null,
+    errorMessage: null
+  });
+
+  useEffect(() => {
+    const handleAuth = auth.onAuthStateChanged(user => {
+      if (user) {
+        setSession({
+          isLoggedIn: true,
+          currentUser: user,
+          errorMessage: null
+        });
+      }
+    });
+
+    return () => {
+      handleAuth();
+    };
+  }, []);
+
+  const handleLogout = () => {
+    auth.signOut().then(response => {
+      setSession({
+        isLoggedIn: false,
+        currentUser: null
+      });
+    });
+  };
+
   return (
     <div className="App">
-      <header className="App-header">
+      {
+        session.isLoggedIn ? (
+        <header className="App-header">
         <img src={logo} className="App-logo" alt="logo" />
         <p>
           Edit <code>src/App.js</code> and save to reload.
@@ -17,7 +56,15 @@ function App() {
         >
           Learn React
         </a>
-      </header>
+        <h1>Ahoy!, {session.currentUser && session.currentUser.email}</h1>
+
+        <button type="button" onClick={handleLogout}>
+            Logout
+          </button>
+
+      </header>) : (<Login setSession = {setSession} />)
+      }
+ 
     </div>
   );
 }
